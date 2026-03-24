@@ -1,0 +1,24 @@
+# Dependencies
+server/node_modules/
+
+# SSL Certificates
+your-domain.com_nginx/
+your-domain.com_nginx.zip
+
+# Server runtime data
+server/data/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# CodeBuddy
+.codebuddy/
+
+# Temporary files
+*.tmp
+*.log

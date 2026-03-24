@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>单词大挑战</title>
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<!-- Apple Touch Icons (iOS主屏幕图标) -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+<!-- PWA 支持 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="单词大挑战">
+<meta name="theme-color" content="#ff9800">
+<style>
+/* ===== CSS Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; height: 100%; }
+body {
+  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100%; overflow-x: hidden;
+  background: linear-gradient(135deg, #fef9ef 0%, #fce4ec 50%, #e8f5e9 100%);
+  background-attachment: fixed;
+  color: #333;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===== Floating Decorations ===== */
+body::before {
+  content: '';
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,183,77,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 85% 60%, rgba(129,212,250,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(200,230,201,0.15) 0%, transparent 50%);
+}
+
+/* ===== Page Container ===== */
+.page {
+  display: none; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 20px 16px 40px;
+  position: relative; z-index: 1;
+  animation: fadeIn 0.35s ease;
+}
+.page.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Home Page ===== */
+.home-header {
+  display: flex; justify-content: flex-end; width: 100%;
+  max-width: 500px; gap: 10px; margin-bottom: 20px;
+}
+.icon-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.85); border: 2px solid #e0e0e0;
+  border-radius: 20px; padding: 8px 16px; font-size: 14px;
+  color: #666; cursor: pointer; transition: all 0.2s;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.icon-btn:hover, .icon-btn:active {
+  background: #fff; border-color: #ff9800; color: #ff9800;
+  transform: scale(1.05);
+}
+.icon-btn .emoji { font-size: 18px; }
+
+.home-logo {
+  margin: 10px 0 8px;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  text-align: center;
+  line-height: 1.3;
+}
+.home-logo .title-main {
+  background: linear-gradient(135deg, #ff6f00, #ff9800, #ffc107);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; font-weight: 900;
+  text-shadow: none;
+  filter: drop-shadow(2px 2px 4px rgba(255,152,0,0.15));
+}
+.home-subtitle {
+  font-size: clamp(0.85rem, 3vw, 1.1rem);
+  color: #888; margin-bottom: 30px; text-align: center;
+}
+
+.home-mascot {
+  font-size: clamp(4rem, 20vw, 8rem);
+  margin: 10px 0 24px;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.home-buttons { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 340px; }
+
+.btn-primary, .btn-secondary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 18px 24px; border-radius: 24px; font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 700; cursor: pointer; border: none;
+  transition: all 0.25s; position: relative; overflow: hidden;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  color: #fff; box-shadow: 0 6px 20px rgba(255,152,0,0.35);
+}
+.btn-primary:hover, .btn-primary:active {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(255,152,0,0.45);
+}
+.btn-secondary {
+  background: linear-gradient(135deg, #81d4fa, #4fc3f7);
+  color: #fff; box-shadow: 0 6px 20px rgba(79,195,247,0.3);
+}
+.btn-secondary:hover, .btn-secondary:active {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(79,195,247,0.4);
+}
+
+.btn-primary .emoji, .btn-secondary .emoji { font-size: 1.4em; }
+
+.home-stats {
+  margin-top: 30px; display: flex; gap: 20px;
+  background: rgba(255,255,255,0.7); border-radius: 20px;
+  padding: 16px 28px; backdrop-filter: blur(8px);
+}
+.stat-item { text-align: center; }
+.stat-num { font-size: 1.5rem; font-weight: 800; color: #ff9800; }
+.stat-label { font-size: 0.75rem; color: #999; margin-top: 2px; }
+
+/* ===== Challenge Page ===== */
+.challenge-topbar {
+  display: flex; align-items: center;
+  width: 100%; max-width: 500px; margin-bottom: 12px;
+}
+.challenge-progress {
+  font-size: 0.9rem; color: #888; font-weight: 600;
+}
+.challenge-score {
+  flex: 1; text-align: center;
+  font-size: 0.9rem; color: #4caf50; font-weight: 600;
+}
+.topbar-right {
+  display: flex; gap: 6px;
+}
+.btn-quit {
+  background: rgba(255,255,255,0.7); border: 1.5px solid #e0e0e0;
+  border-radius: 16px; padding: 6px 14px; font-size: 13px;
+  color: #999; cursor: pointer; transition: all 0.2s;
+}
+.btn-quit:hover { border-color: #ef5350; color: #ef5350; }
+
+/* Progress bar */
+.progress-bar-wrap {
+  width: 100%; max-width: 500px; height: 8px;
+  background: rgba(255,255,255,0.6); border-radius: 4px;
+  margin-bottom: 20px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #ff9800, #ffc107);
+  transition: width 0.4s ease;
+}
+
+/* Image area */
+.challenge-image-wrap {
+  width: clamp(140px, 40vw, 220px); height: clamp(140px, 40vw, 220px);
+  background: #fff; border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px; overflow: hidden;
+  border: 3px solid rgba(255,152,0,0.15);
+}
+.challenge-image-wrap img {
+  max-width: 88%; max-height: 88%; object-fit: contain;
+}
+
+/* Chinese hint */
+.challenge-hint {
+  font-size: clamp(0.85rem, 3vw, 1rem);
+  color: #aaa; margin-bottom: 16px;
+  background: rgba(255,255,255,0.5);
+  padding: 4px 16px; border-radius: 12px;
+}
+
+/* Underscore / blank area */
+.blanks-area {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  margin-bottom: 24px; min-height: 56px;
+  max-width: 500px; width: 100%;
+}
+.word-group {
+  display: inline-flex; gap: 6px;
+}
+.blank-slot {
+  width: clamp(32px, 8vw, 44px); height: clamp(40px, 10vw, 54px);
+  border-bottom: 3px solid #ccc; display: flex; align-items: center;
+  justify-content: center; font-size: clamp(1.2rem, 5vw, 1.6rem);
+  font-weight: 700; color: #333; transition: all 0.2s;
+  position: relative; border-radius: 4px 4px 0 0;
+  background: rgba(255,255,255,0.4);
+}
+.blank-slot.filled {
+  border-bottom-color: #ff9800;
+  background: rgba(255,152,0,0.06);
+  animation: popIn 0.2s ease;
+}
+.blank-slot.correct {
+  border-bottom-color: #4caf50; color: #4caf50;
+  background: rgba(76,175,80,0.08);
+}
+.blank-slot.wrong {
+  border-bottom-color: #ef5350; color: #ef5350;
+  background: rgba(239,83,80,0.08);
+}
+.blank-slot.space-slot, .blank-slot.special-slot {
+  border-bottom-color: transparent; color: #999;
+  background: transparent;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Letter choices */
+.letters-area {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  max-width: 500px; width: 100%; margin-bottom: 20px;
+}
+.letter-btn {
+  width: clamp(38px, 9vw, 50px); height: clamp(38px, 9vw, 50px);
+  border-radius: 14px; border: 2px solid #e0e0e0;
+  background: #fff; font-size: clamp(1rem, 4.5vw, 1.35rem);
+  font-weight: 700; color: #555; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  text-transform: lowercase;
+}
+.letter-btn:hover {
+  border-color: #ff9800; background: #fff8e1;
+  transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,152,0,0.15);
+}
+.letter-btn:active {
+  transform: scale(0.92);
+}
+.letter-btn.used {
+  opacity: 0.25; pointer-events: none;
+  transform: scale(0.9);
+}
+
+/* Action buttons */
+.challenge-actions {
+  display: flex; gap: 12px; max-width: 500px; width: 100%;
+  justify-content: center;
+}
+.btn-action {
+  padding: 14px 32px; border-radius: 20px; font-size: 1rem;
+  font-weight: 700; cursor: pointer; border: none;
+  transition: all 0.2s;
+}
+.btn-submit {
+  background: linear-gradient(135deg, #66bb6a, #43a047);
+  color: #fff; box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(76,175,80,0.4); }
+.btn-submit:disabled { opacity: 0.4; pointer-events: none; }
+.btn-clear {
+  background: rgba(255,255,255,0.8); color: #999;
+  border: 2px solid #e0e0e0;
+}
+.btn-clear:hover { border-color: #ff9800; color: #ff9800; }
+.btn-skip {
+  background: rgba(255,255,255,0.7); border: 1.5px solid #e0e0e0;
+  border-radius: 16px; padding: 6px 14px; font-size: 13px;
+  color: #999; cursor: pointer; transition: all 0.2s;
+}
+.btn-skip:hover { border-color: #2196f3; color: #2196f3; }
+.btn-next {
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  color: #fff; box-shadow: 0 4px 16px rgba(255,152,0,0.3);
+}
+.btn-next:hover { transform: translateY(-2px); }
+
+/* Feedback message */
+.feedback {
+  margin-top: 12px; font-size: 1.1rem; font-weight: 700;
+  min-height: 32px; text-align: center;
+}
+.feedback.correct-fb { color: #4caf50; }
+.feedback.wrong-fb { color: #ef5350; }
+
+/* ===== Result Page ===== */
+.result-card {
+  background: #fff; border-radius: 28px; padding: 32px 24px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  text-align: center; margin-top: 20px;
+}
+.result-emoji { font-size: 4rem; margin-bottom: 12px; }
+.result-title {
+  font-size: 1.6rem; font-weight: 800;
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.result-score {
+  font-size: 3rem; font-weight: 900; color: #ff9800;
+  margin: 12px 0;
+}
+.result-detail {
+  color: #888; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.8;
+}
+.result-wrong-list {
+  text-align: left; margin: 16px 0;
+  background: #fff8e1; border-radius: 16px; padding: 16px;
+}
+.result-wrong-list h3 {
+  font-size: 0.95rem; color: #ef5350; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.wrong-word-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+  font-size: 0.9rem;
+}
+.wrong-word-item:last-child { border-bottom: none; }
+.wrong-word-item .rank { color: #ef5350; font-weight: 800; min-width: 24px; }
+.wrong-word-item .word { font-weight: 700; color: #333; }
+.wrong-word-item .meaning { color: #999; font-size: 0.8rem; }
+.wrong-word-item img {
+  width: 36px; height: 36px; object-fit: contain;
+  border-radius: 8px; background: #f5f5f5;
+}
+
+.result-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+
+/* ===== Leaderboard ===== */
+.lb-card {
+  background: #fff; border-radius: 28px; padding: 24px 20px;
+  max-width: 460px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  margin-top: 10px;
+}
+.lb-card h2 {
+  font-size: 1.3rem; margin-bottom: 16px; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+.lb-tabs {
+  display: flex; gap: 0; margin-bottom: 16px;
+  background: #f5f5f5; border-radius: 14px; padding: 3px;
+}
+.lb-tab {
+  flex: 1; padding: 10px; text-align: center; font-size: 0.85rem;
+  font-weight: 600; cursor: pointer; border-radius: 12px;
+  color: #999; transition: all 0.2s; border: none; background: transparent;
+}
+.lb-tab.active { background: #fff; color: #ff9800; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.lb-list {
+  max-height: 50vh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.lb-list::-webkit-scrollbar { width: 4px; }
+.lb-list::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+
+.lb-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 8px; border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.lb-item:last-child { border-bottom: none; }
+.lb-rank {
+  font-size: 1.1rem; font-weight: 800; min-width: 32px; text-align: center;
+}
+.lb-rank.gold { color: #ffc107; }
+.lb-rank.silver { color: #90a4ae; }
+.lb-rank.bronze { color: #ff8a65; }
+.lb-info { flex: 1; }
+.lb-info .lb-date { font-size: 0.75rem; color: #bbb; }
+.lb-info .lb-type { font-size: 0.8rem; color: #888; }
+.lb-score-val { font-size: 1.2rem; font-weight: 800; color: #ff9800; }
+
+.lb-empty {
+  text-align: center; padding: 40px 20px; color: #ccc; font-size: 0.95rem;
+}
+
+/* Wrong word leaderboard */
+.wrong-lb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.wrong-lb-item:last-child { border-bottom: none; }
+.wrong-lb-item img {
+  width: 40px; height: 40px; object-fit: contain;
+  border-radius: 10px; background: #f5f5f5;
+}
+.wrong-lb-word { font-weight: 700; font-size: 0.95rem; }
+.wrong-lb-meaning { font-size: 0.75rem; color: #aaa; }
+.wrong-lb-count {
+  margin-left: auto; font-size: 0.85rem; font-weight: 700;
+  color: #ef5350; background: rgba(239,83,80,0.08);
+  padding: 4px 12px; border-radius: 12px;
+}
+
+/* Back button */
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.7); border: 2px solid #e0e0e0;
+  border-radius: 18px; padding: 8px 20px; font-size: 0.9rem;
+  color: #888; cursor: pointer; transition: all 0.2s;
+  align-self: flex-start; margin-bottom: 16px;
+  max-width: 500px;
+}
+.btn-back:hover { border-color: #ff9800; color: #ff9800; }
+
+/* ===== Wrong Words Book ===== */
+.wrong-book-card {
+  background: #fff; border-radius: 28px; padding: 24px 20px 48px;
+  max-width: 460px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  margin-top: 10px;
+  position: relative;
+}
+.wrong-book-card h2 {
+  font-size: 1.3rem; margin-bottom: 16px; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.wrong-book-list {
+  max-height: 60vh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.wrong-book-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 8px; border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.wrong-book-item:last-child { border-bottom: none; }
+.wrong-book-item img {
+  width: 48px; height: 48px; object-fit: contain;
+  border-radius: 12px; background: #f5f5f5; flex-shrink: 0;
+}
+.wrong-book-info { flex: 1; }
+.wrong-book-word { font-weight: 700; font-size: 1rem; }
+.wrong-book-meaning { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
+.wrong-book-stats {
+  display: flex; gap: 8px; margin-top: 4px;
+}
+.wrong-book-stat {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 8px;
+}
+.wrong-book-stat.bad { background: rgba(239,83,80,0.08); color: #ef5350; }
+.wrong-book-stat.good { background: rgba(76,175,80,0.08); color: #4caf50; }
+
+.wrong-book-rate {
+  font-size: 1.1rem; font-weight: 800; min-width: 50px;
+  text-align: right;
+}
+.wrong-book-rate.high-err { color: #ef5350; }
+.wrong-book-rate.mid-err { color: #ff9800; }
+.wrong-book-rate.low-err { color: #ffc107; }
+
+.btn-clear-wrong {
+  position: absolute; right: 16px; bottom: 12px;
+  padding: 4px 12px; font-size: 0.7rem; font-weight: 600;
+  background: rgba(239,83,80,0.06); border: 1px solid rgba(239,83,80,0.2);
+  border-radius: 10px; color: #ef5350; cursor: pointer; transition: all 0.2s;
+}
+.btn-clear-wrong:hover { background: rgba(239,83,80,0.12); }
+
+/* ===== Correct Celebration ===== */
+@keyframes starBurst {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+.celebration {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+.star-particle {
+  position: absolute; font-size: 1.5rem;
+  animation: starFall 1s ease-out forwards;
+}
+@keyframes starFall {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(60px) scale(0.3); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 414px) {
+  .page { padding: 16px 12px 32px; }
+  .home-header { gap: 6px; }
+  .icon-btn { padding: 6px 12px; font-size: 12px; }
+  .blanks-area { gap: 4px; }
+  .word-group { gap: 4px; }
+  .blank-slot { width: 28px; height: 36px; font-size: 1rem; }
+  .letters-area { gap: 5px; }
+  .letter-btn { width: 36px; height: 36px; font-size: 0.95rem; border-radius: 10px; }
+  .challenge-image-wrap { width: 130px; height: 130px; border-radius: 20px; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* iPad */
+  .challenge-image-wrap { width: 200px; height: 200px; }
+  .blank-slot { width: 42px; height: 52px; }
+  .letter-btn { width: 48px; height: 48px; }
+}
+
+/* ===== Login Page ===== */
+.login-card {
+  background: #fff; border-radius: 28px; padding: 36px 28px;
+  max-width: 380px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  text-align: center; margin-top: 30px;
+}
+.login-mascot { font-size: 4rem; margin-bottom: 12px; }
+.login-title {
+  font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.login-subtitle { font-size: 0.85rem; color: #aaa; margin-bottom: 24px; }
+.login-input-wrap {
+  position: relative; margin-bottom: 20px;
+}
+.login-input {
+  width: 100%; padding: 14px 20px; border-radius: 18px;
+  border: 2px solid #e0e0e0; font-size: 1.1rem; font-weight: 600;
+  text-align: center; outline: none; transition: border-color 0.2s;
+  background: #fafafa; color: #333;
+  font-family: inherit;
+}
+.login-input:focus { border-color: #ff9800; background: #fff; }
+.login-input::placeholder { color: #ccc; font-weight: 400; }
+.login-btn {
+  width: 100%; padding: 16px; border-radius: 20px; border: none;
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  color: #fff; font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(255,152,0,0.3);
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,152,0,0.4); }
+.login-btn:disabled { opacity: 0.4; pointer-events: none; }
+.login-history {
+  margin-top: 20px; text-align: left;
+}
+.login-history-title {
+  font-size: 0.8rem; color: #bbb; margin-bottom: 8px; text-align: center;
+}
+.login-user-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 14px; cursor: pointer;
+  transition: all 0.2s; margin-bottom: 4px;
+}
+.login-user-item:hover { background: #fff8e1; }
+.login-user-avatar { font-size: 1.6rem; min-width: 36px; text-align: center; }
+.login-user-name { font-size: 0.95rem; font-weight: 600; color: #555; flex: 1; }
+.login-user-delete {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(239,83,80,0.08); border: none;
+  color: #ef5350; font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: all 0.2s;
+  opacity: 0.6;
+}
+.login-user-delete:hover {
+  background: rgba(239,83,80,0.2); opacity: 1;
+  transform: scale(1.1);
+}
+
+/* ===== User Avatar (Home Page) ===== */
+.home-top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; max-width: 500px; margin-bottom: 10px;
+}
+.user-avatar-wrap {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.85); border-radius: 20px;
+  padding: 6px 14px 6px 8px;
+  border: 2px solid #e0e0e0; transition: all 0.2s;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.user-avatar-wrap:hover { border-color: #ff9800; }
+.user-avatar-emoji { font-size: 1.5rem; }
+.user-avatar-name { font-size: 0.85rem; font-weight: 600; color: #666; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== User Ranking in Leaderboard ===== */
+.user-rank-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 8px; border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.user-rank-item:last-child { border-bottom: none; }
+.user-rank-item.current-user { background: rgba(255,152,0,0.06); border-radius: 12px; }
+.user-rank-avatar { font-size: 1.5rem; min-width: 36px; text-align: center; }
+.user-rank-name { font-weight: 700; font-size: 0.95rem; color: #333; flex: 1; }
+.user-rank-score { font-size: 1.1rem; font-weight: 800; color: #ff9800; }
+
+/* ===== Utility ===== */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+
+/* ===== Confirm Dialog ===== */
+.dialog-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.35); display: flex; align-items: center;
+  justify-content: center; z-index: 100; animation: fadeIn 0.2s;
+}
+.dialog-box {
+  background: #fff; border-radius: 24px; padding: 28px 24px;
+  max-width: 320px; width: 90%; text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+.dialog-box p { font-size: 1rem; color: #555; margin-bottom: 20px; line-height: 1.6; }
+.dialog-btns { display: flex; gap: 12px; }
+.dialog-btns button {
+  flex: 1; padding: 12px; border-radius: 16px; font-size: 0.95rem;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+}
+.dialog-cancel { background: #f5f5f5; color: #999; }
+.dialog-confirm { background: linear-gradient(135deg, #ef5350, #e53935); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="page-login" class="page active">
+  <div class="login-card">
+    <div class="login-mascot">🐚</div>
+    <div class="login-title">欢迎来到单词拼写大挑战</div>
+    <div class="login-subtitle">请输入你的名字开始学习吧！</div>
+    <div class="login-input-wrap">
+      <input type="text" class="login-input" id="login-name" placeholder="输入你的名字" maxlength="12" autocomplete="off" />
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()" disabled>开始学习 🐚</button>
+    <div class="login-history" id="login-history"></div>
+  </div>
+</div>
+
+<!-- ==================== HOME PAGE ==================== -->
+<div id="page-home" class="page">
+  <div class="home-top-bar">
+    <div class="user-avatar-wrap" onclick="switchUser()">
+      <span class="user-avatar-emoji" id="home-avatar">🐚</span>
+      <span class="user-avatar-name" id="home-username">用户</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="icon-btn" onclick="showPage('leaderboard')">
+        <span class="emoji">🏆</span><span>排行榜</span>
+      </button>
+      <button class="icon-btn" onclick="showPage('wrongbook')">
+        <span class="emoji">📖</span><span>错题本</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="home-mascot">🐚</div>
+  <div class="home-logo">
+    <div class="title-main">单词拼写大挑战</div>
+  </div>
+  <div class="home-subtitle">和小贝壳一起学英语吧！</div>
+
+  <div class="home-buttons">
+    <button class="btn-primary" onclick="startChallenge('smart20')">
+      <span class="emoji">⭐</span> 开始挑战
+    </button>
+    <button class="btn-secondary" onclick="startChallenge('all')">
+      <span class="emoji">🚀</span> 挑战全部
+    </button>
+  </div>
+
+  <div class="home-stats">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">已挑战</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-mastered">0</div>
+      <div class="stat-label">已掌握</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-accuracy">-</div>
+      <div class="stat-label">正确率</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CHALLENGE PAGE ==================== -->
+<div id="page-challenge" class="page">
+  <div class="challenge-topbar">
+    <span class="challenge-progress" id="ch-progress">1 / 50</span>
+    <span class="challenge-score" id="ch-score">✅ 0</span>
+    <div class="topbar-right">
+      <button class="btn-quit" onclick="confirmQuit()">退出</button>
+      <button class="btn-skip" id="btn-skip" onclick="confirmSkip()">跳过</button>
+    </div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="ch-progress-bar" style="width:0%"></div>
+  </div>
+
+  <div class="challenge-image-wrap">
+    <img id="ch-image" src="" alt="word image" />
+  </div>
+
+  <div class="challenge-hint" id="ch-hint"></div>
+
+  <div class="blanks-area" id="ch-blanks"></div>
+
+  <div class="letters-area" id="ch-letters"></div>
+
+  <div class="challenge-actions" id="ch-actions">
+    <button class="btn-action btn-clear" onclick="clearAnswer()">清除</button>
+    <button class="btn-action btn-submit" id="btn-submit" onclick="submitAnswer()" disabled>提交</button>
+  </div>
+  <div class="challenge-actions hidden" id="ch-next-wrap">
+    <button class="btn-action btn-next" onclick="nextWord()">
+      <span id="next-btn-text">下一个 ➜</span>
+    </button>
+  </div>
+
+  <div class="feedback" id="ch-feedback"></div>
+</div>
+
+<!-- ==================== RESULT PAGE ==================== -->
+<div id="page-result" class="page">
+  <div class="result-card">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <div class="result-title" id="res-title">太棒了！</div>
+    <div class="result-score" id="res-score">96分</div>
+    <div class="result-detail" id="res-detail"></div>
+
+    <div class="result-wrong-list hidden" id="res-wrong-list">
+      <h3>😅 错误单词 TOP 3</h3>
+      <div id="res-wrong-items"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-primary" onclick="startChallenge('smart20')">
+        <span class="emoji">⭐</span> 再来一次
+      </button>
+      <button class="btn-secondary" onclick="showPage('home')">
+        <span class="emoji">🏠</span> 返回首页
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LEADERBOARD PAGE ==================== -->
+<div id="page-leaderboard" class="page">
+  <button class="btn-back" onclick="showPage('home')">← 返回首页</button>
+  <div class="lb-card">
+    <h2>🏆 排行榜</h2>
+    <div class="lb-tabs">
+      <button class="lb-tab active" onclick="switchLbTab('scores', this)">挑战分数</button>
+      <button class="lb-tab" onclick="switchLbTab('userrank', this)">用户排行</button>
+    </div>
+    <div id="lb-scores" class="lb-list"></div>
+    <div id="lb-userrank" class="lb-list hidden"></div>
+  </div>
+</div>
+
+<!-- ==================== WRONG BOOK PAGE ==================== -->
+<div id="page-wrongbook" class="page">
+  <button class="btn-back" onclick="showPage('home')">← 返回首页</button>
+  <div class="wrong-book-card">
+    <h2>📖 错题本</h2>
+    <div class="wrong-book-list" id="wrong-book-list"></div>
+    <button class="btn-clear-wrong hidden" id="btn-clear-wrong" onclick="confirmClearWrong()">清空错题本</button>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM DIALOG ==================== -->
+<div id="dialog-overlay" class="dialog-overlay hidden">
+  <div class="dialog-box">
+    <p id="dialog-msg">确定退出吗？</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeDialog()">取消</button>
+      <button class="dialog-confirm" id="dialog-confirm-btn" onclick="">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA & STATE =====
+let WORDS = [];
+let currentChallenge = null;
+let currentAnswer = [];
+let currentWordMeta = null;
+let isShowingResult = false;
+
+// ===== 云端 API 配置 =====
+// API 通过 Nginx 代理，使用相对路径
+const API_BASE = '/api';
+
+// 缓存数据，减少 API 请求
+let cachedWordStats = null;
+let cachedHistory = null;
+let cachedUsersDB = null;
+
+// ===== USER SYSTEM =====
+let currentUser = null; // { name, avatar }
+const ANIMAL_EMOJIS = ['🐶','🐱','🐼','🐨','🐯','🦁','🐸','🐵','🐰','🐻','🦊','🐷','🐮','🐔','🐧','🐦','🐤','🦄','🐝','🐢','🐙','🐬','🦋','🐞','🦀','🐠','🦩','🦜','🐿️','🦔'];
+
+// ===== 云端 API 调用函数 =====
+async function apiGet(endpoint) {
+  try {
+    const resp = await fetch(API_BASE + endpoint);
+    if (!resp.ok) throw new Error('API 请求失败');
+    return await resp.json();
+  } catch (err) {
+    console.error('API GET 错误:', endpoint, err);
+    return null;
+  }
+}
+
+async function apiPost(endpoint, data) {
+  try {
+    const resp = await fetch(API_BASE + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('API 请求失败');
+    return await resp.json();
+  } catch (err) {
+    console.error('API POST 错误:', endpoint, err);
+    return null;
+  }
+}
+
+async function getUsersDB() {
+  if (cachedUsersDB) return cachedUsersDB;
+  const data = await apiGet('/users');
+  cachedUsersDB = data || {};
+  return cachedUsersDB;
+}
+
+async function saveUsersDB(db) {
+  cachedUsersDB = db;
+  // 用户 DB 在登录时会自动更新，不需要单独保存
+}
+
+function getAvatarForUser(name) {
+  if (name === 'Sheldon' || name === 'sheldon') return '🐚';
+  // Deterministic random based on name
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash) + name.charCodeAt(i);
+  return ANIMAL_EMOJIS[Math.abs(hash) % ANIMAL_EMOJIS.length];
+}
+
+async function renderLoginHistory() {
+  const db = await getUsersDB();
+  const container = document.getElementById('login-history');
+  const users = Object.keys(db);
+  if (users.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  let html = '<div class="login-history-title">最近登录的用户</div>';
+  users.forEach(name => {
+    const avatar = getAvatarForUser(name);
+    html += `<div class="login-user-item">
+      <span class="login-user-avatar" onclick="quickLogin('${name.replace(/'/g, "\\'")}')">${avatar}</span>
+      <span class="login-user-name" onclick="quickLogin('${name.replace(/'/g, "\\'")}')">${name}</span>
+      <button class="login-user-delete" onclick="event.stopPropagation(); confirmDeleteUser('${name.replace(/'/g, "\\'")}')">×</button>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function quickLogin(name) {
+  document.getElementById('login-name').value = name;
+  doLogin();
+}
+
+async function doLogin() {
+  const nameInput = document.getElementById('login-name');
+  const name = nameInput.value.trim();
+  if (!name) return;
+
+  // 显示加载状态
+  const loginBtn = document.getElementById('login-btn');
+  loginBtn.textContent = '登录中...';
+  loginBtn.disabled = true;
+
+  // 在云端注册/登录用户
+  await apiPost('/users/' + encodeURIComponent(name), {});
+  
+  // 清除缓存，重新加载用户数据
+  cachedWordStats = null;
+  cachedHistory = null;
+  cachedUsersDB = null;
+
+  const avatar = getAvatarForUser(name);
+  currentUser = { name, avatar };
+  localStorage.setItem('sw_last_user', name);
+
+  // 预加载用户数据
+  await getWordStats();
+  await getHistory();
+
+  // Update home avatar
+  document.getElementById('home-avatar').textContent = avatar;
+  document.getElementById('home-username').textContent = name;
+
+  // 恢复按钮状态
+  loginBtn.textContent = '开始学习 🐚';
+  loginBtn.disabled = false;
+
+  showPage('home');
+}
+
+async function switchUser() {
+  currentUser = null;
+  cachedWordStats = null;
+  cachedHistory = null;
+  document.getElementById('login-name').value = '';
+  await renderLoginHistory();
+  showPage('login');
+}
+
+// ===== 云端数据存取函数 =====
+async function getWordStats() {
+  if (!currentUser) return {};
+  if (cachedWordStats) return cachedWordStats;
+  
+  const data = await apiGet('/users/' + encodeURIComponent(currentUser.name) + '/word_stats');
+  cachedWordStats = data || {};
+  return cachedWordStats;
+}
+
+async function saveWordStats(stats) {
+  if (!currentUser) return;
+  cachedWordStats = stats;
+  await apiPost('/users/' + encodeURIComponent(currentUser.name) + '/word_stats', stats);
+}
+
+async function updateWordStat(wordId, isCorrect) {
+  const stats = await getWordStats();
+  if (!stats[wordId]) stats[wordId] = { correct: 0, wrong: 0, seen: 0 };
+  stats[wordId].seen++;
+  if (isCorrect) stats[wordId].correct++;
+  else stats[wordId].wrong++;
+  await saveWordStats(stats);
+}
+
+async function getHistory() {
+  if (!currentUser) return [];
+  if (cachedHistory) return cachedHistory;
+  
+  const data = await apiGet('/users/' + encodeURIComponent(currentUser.name) + '/history');
+  cachedHistory = data || [];
+  return cachedHistory;
+}
+
+async function saveHistory(entry) {
+  if (!currentUser) return;
+  const history = await getHistory();
+  history.push(entry);
+  cachedHistory = history;
+  await apiPost('/users/' + encodeURIComponent(currentUser.name) + '/history/add', entry);
+}
+
+// ===== INIT =====
+async function init() {
+  try {
+    const resp = await fetch('extracted_data_final/data.json');
+    WORDS = await resp.json();
+  } catch (e) {
+    console.error('Failed to load data.json', e);
+    alert('加载单词数据失败，请确保 extracted_data_final/data.json 可访问');
+    return;
+  }
+
+  // Login input listener
+  const loginInput = document.getElementById('login-name');
+  loginInput.addEventListener('input', () => {
+    document.getElementById('login-btn').disabled = !loginInput.value.trim();
+  });
+  loginInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && loginInput.value.trim()) doLogin();
+  });
+
+  // Auto login last user
+  const lastUser = localStorage.getItem('sw_last_user');
+  if (lastUser) {
+    const db = await getUsersDB();
+    if (db[lastUser]) {
+      document.getElementById('login-name').value = lastUser;
+      doLogin();
+      return;
+    }
+  }
+
+  await renderLoginHistory();
+}
+
+// ===== PAGE NAVIGATION =====
+async function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'home') await updateHomeStats();
+  if (name === 'leaderboard') await renderLeaderboard();
+  if (name === 'wrongbook') await renderWrongBook();
+}
+
+// ===== HOME STATS =====
+async function updateHomeStats() {
+  const stats = await getWordStats();
+  const history = await getHistory();
+  const totalChallenges = history.length;
+  const mastered = Object.values(stats).filter(s => {
+    const total = s.correct + s.wrong;
+    return total > 0 && (s.wrong / total) < 0.35;
+  }).length;
+  const totalAttempts = Object.values(stats).reduce((a, s) => a + s.correct + s.wrong, 0);
+  const totalCorrect = Object.values(stats).reduce((a, s) => a + s.correct, 0);
+
+  document.getElementById('stat-total').textContent = totalChallenges;
+  document.getElementById('stat-mastered').textContent = mastered;
+  document.getElementById('stat-accuracy').textContent =
+    totalAttempts > 0 ? Math.round(totalCorrect / totalAttempts * 100) + '%' : '-';
+}
+
+// ===== SMART WORD SELECTION =====
+async function selectSmart20() {
+  const stats = await getWordStats();
+  const scored = WORDS.map(w => {
+    const s = stats[w['编号']] || { correct: 0, wrong: 0, seen: 0 };
+    let score = 100;
+    const total = s.correct + s.wrong;
+    if (total > 0) {
+      const errorRate = s.wrong / total;
+      score += errorRate * 80;
+    }
+    score -= s.seen * 3;
+    if (s.seen === 0) score += 50;
+    score += Math.random() * 40;
+    return { word: w, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const selected = scored.slice(0, 20).map(s => s.word);
+  for (let i = selected.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [selected[i], selected[j]] = [selected[j], selected[i]];
+  }
+  return selected;
+}
+
+// ===== START CHALLENGE =====
+async function startChallenge(type) {
+  let words;
+  if (type === 'smart20') {
+    words = await selectSmart20();
+  } else {
+    words = [...WORDS];
+    for (let i = words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [words[i], words[j]] = [words[j], words[i]];
+    }
+  }
+
+  currentChallenge = {
+    type,
+    words,
+    index: 0,
+    results: [],
+    correctCount: 0,
+  };
+
+  showPage('challenge');
+  loadCurrentWord();
+}
+
+// ===== LOAD CURRENT WORD =====
+function loadCurrentWord() {
+  const ch = currentChallenge;
+  const w = ch.words[ch.index];
+  const spelling = w['单词拼写'];
+
+  document.getElementById('ch-progress').textContent = `${ch.index + 1} / ${ch.words.length}`;
+  document.getElementById('ch-score').textContent = `✅ ${ch.correctCount}`;
+  const pct = ((ch.index) / ch.words.length * 100).toFixed(1);
+  document.getElementById('ch-progress-bar').style.width = pct + '%';
+
+  document.getElementById('ch-image').src = 'extracted_data_final/' + w['图片路径'];
+
+  const hint = w['中文意思'].replace(/\n/g, '');
+  document.getElementById('ch-hint').textContent = hint;
+
+  const blanks = [];
+  const lettersNeeded = [];
+  for (let i = 0; i < spelling.length; i++) {
+    const ch2 = spelling[i];
+    if (ch2 === ' ' || ch2 === '/' || ch2 === '-') {
+      blanks.push({ type: 'special', char: ch2 });
+    } else if (ch2 === '(' || ch2 === ')') {
+      blanks.push({ type: 'special', char: ch2 });
+    } else {
+      blanks.push({ type: 'letter', char: ch2.toLowerCase(), index: lettersNeeded.length });
+      lettersNeeded.push(ch2.toLowerCase());
+    }
+  }
+
+  const extraCount = Math.min(3, Math.max(2, Math.floor(lettersNeeded.length * 0.3) + 1));
+  const allLetters = [...lettersNeeded];
+  const vowels = ['a', 'e', 'i', 'o', 'u'];
+  const usedSet = new Set(lettersNeeded);
+  // 优先使用正确答案中没有的元音作为干扰
+  let unusedVowels = vowels.filter(v => !usedSet.has(v));
+  if (unusedVowels.length === 0) unusedVowels = vowels;
+  for (let i = 0; i < extraCount; i++) {
+    allLetters.push(unusedVowels[Math.floor(Math.random() * unusedVowels.length)]);
+  }
+  for (let i = allLetters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allLetters[i], allLetters[j]] = [allLetters[j], allLetters[i]];
+  }
+
+  currentWordMeta = { word: spelling, blanks, letters: allLetters, needed: lettersNeeded };
+  currentAnswer = [];
+  isShowingResult = false;
+
+  renderBlanks();
+  renderLetters();
+
+  document.getElementById('ch-actions').classList.remove('hidden');
+  document.getElementById('ch-next-wrap').classList.add('hidden');
+  document.getElementById('ch-feedback').textContent = '';
+  document.getElementById('ch-feedback').className = 'feedback';
+  document.getElementById('btn-submit').disabled = true;
+
+  // 显示跳过按钮
+  document.getElementById('btn-skip').style.display = '';
+}
+
+function renderBlanks() {
+  const container = document.getElementById('ch-blanks');
+  container.innerHTML = '';
+  const blanks = currentWordMeta.blanks;
+
+  // 将 blanks 按空格/斜杠分成词段，每段用一个 word-group 包裹
+  // 空格和斜杠归入其前面的词段末尾（作为分隔符）
+  const groups = [[]];
+  blanks.forEach((b, i) => {
+    groups[groups.length - 1].push({ blank: b, index: i });
+    // 遇到空格或斜杠后，开始新的一组
+    if (b.type === 'special' && (b.char === ' ' || b.char === '/')) {
+      groups.push([]);
+    }
+  });
+  // 过滤掉可能出现的空组
+  const validGroups = groups.filter(g => g.length > 0);
+
+  validGroups.forEach(group => {
+    const wrap = document.createElement('div');
+    wrap.className = 'word-group';
+
+    group.forEach(({ blank: b, index: i }) => {
+      const el = document.createElement('div');
+      el.className = 'blank-slot';
+      if (b.type === 'special') {
+        if (b.char === ' ') {
+          el.classList.add('space-slot');
+          el.textContent = ' ';
+          el.style.width = '20px';
+          el.style.minWidth = '20px';
+        } else {
+          el.classList.add('special-slot');
+          el.textContent = b.char;
+        }
+      } else {
+        el.addEventListener('click', () => removeLetter(i));
+        el.style.cursor = 'pointer';
+      }
+      el.dataset.index = i;
+      wrap.appendChild(el);
+    });
+
+    container.appendChild(wrap);
+  });
+}
+
+function getBlankEls() {
+  return document.getElementById('ch-blanks').querySelectorAll('.blank-slot');
+}
+
+function renderLetters() {
+  const container = document.getElementById('ch-letters');
+  container.innerHTML = '';
+  currentWordMeta.letters.forEach((letter, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'letter-btn';
+    btn.textContent = letter;
+    btn.dataset.index = i;
+    btn.addEventListener('click', () => pickLetter(i));
+    container.appendChild(btn);
+  });
+}
+
+// ===== PICK / REMOVE LETTER =====
+function pickLetter(btnIndex) {
+  if (isShowingResult) return;
+  const blanks = currentWordMeta.blanks;
+  let targetBlank = -1;
+  for (let i = 0; i < blanks.length; i++) {
+    if (blanks[i].type === 'letter') {
+      const filled = currentAnswer.find(a => a.blankIndex === i);
+      if (!filled) { targetBlank = i; break; }
+    }
+  }
+  if (targetBlank === -1) return;
+
+  const letter = currentWordMeta.letters[btnIndex];
+  currentAnswer.push({ blankIndex: targetBlank, letter, btnIndex });
+
+  const blankEls = getBlankEls();
+  blankEls[targetBlank].textContent = letter;
+  blankEls[targetBlank].classList.add('filled');
+
+  const letterBtns = document.getElementById('ch-letters').children;
+  letterBtns[btnIndex].classList.add('used');
+
+  const totalLetterBlanks = blanks.filter(b => b.type === 'letter').length;
+  document.getElementById('btn-submit').disabled = currentAnswer.length < totalLetterBlanks;
+}
+
+function removeLetter(blankIndex) {
+  if (isShowingResult) return;
+  const entryIdx = currentAnswer.findIndex(a => a.blankIndex === blankIndex);
+  if (entryIdx === -1) return;
+
+  const removed = currentAnswer.splice(entryIdx);
+  const blankEls = getBlankEls();
+  const letterBtns = document.getElementById('ch-letters').children;
+
+  removed.forEach(r => {
+    blankEls[r.blankIndex].textContent = '';
+    blankEls[r.blankIndex].className = 'blank-slot';
+    blankEls[r.blankIndex].style.cursor = 'pointer';
+    letterBtns[r.btnIndex].classList.remove('used');
+  });
+
+  const totalLetterBlanks = currentWordMeta.blanks.filter(b => b.type === 'letter').length;
+  document.getElementById('btn-submit').disabled = currentAnswer.length < totalLetterBlanks;
+}
+
+function clearAnswer() {
+  if (isShowingResult) return;
+  currentAnswer = [];
+  const blankEls = getBlankEls();
+  for (let i = 0; i < blankEls.length; i++) {
+    const b = currentWordMeta.blanks[i];
+    if (b.type === 'letter') {
+      blankEls[i].textContent = '';
+      blankEls[i].className = 'blank-slot';
+    }
+  }
+  const letterBtns = document.getElementById('ch-letters').children;
+  for (let i = 0; i < letterBtns.length; i++) {
+    letterBtns[i].classList.remove('used');
+  }
+  document.getElementById('btn-submit').disabled = true;
+}
+
+// ===== SUBMIT ANSWER =====
+async function submitAnswer() {
+  if (isShowingResult) return;
+  isShowingResult = true;
+  const blanks = currentWordMeta.blanks;
+  const blankEls = getBlankEls();
+  const ch = currentChallenge;
+  const w = ch.words[ch.index];
+
+  let userAnswer = '';
+  let allCorrect = true;
+
+  for (let i = 0; i < blanks.length; i++) {
+    if (blanks[i].type === 'special') {
+      userAnswer += blanks[i].char;
+    } else {
+      const entry = currentAnswer.find(a => a.blankIndex === i);
+      const userChar = entry ? entry.letter.toLowerCase() : '';
+      const correctChar = blanks[i].char.toLowerCase();
+      userAnswer += userChar;
+
+      if (userChar === correctChar) {
+        blankEls[i].classList.add('correct');
+      } else {
+        blankEls[i].classList.add('wrong');
+        blankEls[i].textContent = correctChar;
+        allCorrect = false;
+      }
+    }
+  }
+
+  ch.results.push({ word: w, correct: allCorrect });
+  if (allCorrect) ch.correctCount++;
+
+  await updateWordStat(w['编号'], allCorrect);
+
+  const fb = document.getElementById('ch-feedback');
+  if (allCorrect) {
+    fb.textContent = '😝 太棒了！回答正确！';
+    fb.className = 'feedback correct-fb';
+    showCelebration();
+  } else {
+    fb.textContent = '😝 差一点点，正确拼写已标红';
+    fb.className = 'feedback wrong-fb';
+  }
+
+  document.getElementById('btn-skip').style.display = 'none';
+  document.getElementById('ch-actions').classList.add('hidden');
+  document.getElementById('ch-next-wrap').classList.remove('hidden');
+
+  const isLast = ch.index >= ch.words.length - 1;
+  document.getElementById('next-btn-text').textContent = isLast ? '查看成绩 🎯' : '下一个 ➜';
+}
+
+// ===== SKIP WORD =====
+async function skipWord() {
+  if (isShowingResult) return;
+  isShowingResult = true;
+
+  const blanks = currentWordMeta.blanks;
+  const blankEls = getBlankEls();
+  const ch = currentChallenge;
+  const w = ch.words[ch.index];
+
+  // 逐字对比：已填正确标绿，未填或错填标红并显示正确字母
+  for (let i = 0; i < blanks.length; i++) {
+    if (blanks[i].type === 'special') continue;
+    const entry = currentAnswer.find(a => a.blankIndex === i);
+    const userChar = entry ? entry.letter.toLowerCase() : '';
+    const correctChar = blanks[i].char.toLowerCase();
+
+    if (userChar === correctChar) {
+      blankEls[i].classList.add('correct');
+    } else {
+      blankEls[i].classList.add('wrong');
+      blankEls[i].textContent = correctChar;
+    }
+  }
+
+  // 记录为错误
+  ch.results.push({ word: w, correct: false });
+  await updateWordStat(w['编号'], false);
+
+  // 显示反馈
+  const fb = document.getElementById('ch-feedback');
+  fb.textContent = '⏭️ 已跳过，正确拼写已标出';
+  fb.className = 'feedback wrong-fb';
+
+  // 隐藏操作按钮，显示"下一个"按钮
+  document.getElementById('btn-skip').style.display = 'none';
+  document.getElementById('ch-actions').classList.add('hidden');
+  document.getElementById('ch-next-wrap').classList.remove('hidden');
+
+  const isLast = ch.index >= ch.words.length - 1;
+  document.getElementById('next-btn-text').textContent = isLast ? '查看成绩 🎯' : '下一个 ➜';
+}
+
+// ===== NEXT WORD =====
+function nextWord() {
+  const ch = currentChallenge;
+  ch.index++;
+  if (ch.index >= ch.words.length) {
+    showResult();
+  } else {
+    loadCurrentWord();
+  }
+}
+
+// ===== SHOW RESULT =====
+async function showResult() {
+  const ch = currentChallenge;
+  const total = ch.words.length;
+  const correct = ch.correctCount;
+  const score = Math.round(correct / total * 100);
+  const wrongResults = ch.results.filter(r => !r.correct);
+
+  const historyEntry = {
+    date: new Date().toISOString(),
+    type: ch.type === 'smart20' ? '随机挑战' : '全部挑战',
+    score,
+    total,
+    correct,
+    wrongWords: wrongResults.map(r => r.word['编号']),
+  };
+  await saveHistory(historyEntry);
+
+  let emoji, title;
+  if (score >= 95) { emoji = '🏆'; title = '太厉害了！完美！'; }
+  else if (score >= 80) { emoji = '🎉'; title = '非常棒！继续加油！'; }
+  else if (score >= 60) { emoji = '😊'; title = '不错哦！还能更好！'; }
+  else { emoji = '💪'; title = '加油！多练习就好了！'; }
+
+  document.getElementById('res-emoji').textContent = emoji;
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-score').textContent = score + '分';
+  document.getElementById('res-detail').innerHTML =
+    `答对 <b style="color:#4caf50">${correct}</b> 个，答错 <b style="color:#ef5350">${total - correct}</b> 个<br>共 ${total} 个单词`;
+
+  const wrongListEl = document.getElementById('res-wrong-list');
+  const wrongItemsEl = document.getElementById('res-wrong-items');
+  if (wrongResults.length > 0) {
+    wrongListEl.classList.remove('hidden');
+    wrongItemsEl.innerHTML = '';
+    wrongResults.slice(0, 3).forEach((r, i) => {
+      const w = r.word;
+      const div = document.createElement('div');
+      div.className = 'wrong-word-item';
+      div.innerHTML = `
+        <span class="rank">${i + 1}</span>
+        <img src="extracted_data_final/${w['图片路径']}" />
+        <span class="word">${w['单词拼写']}</span>
+        <span class="meaning">${w['中文意思'].replace(/\n/g, '')}</span>
+      `;
+      wrongItemsEl.appendChild(div);
+    });
+  } else {
+    wrongListEl.classList.add('hidden');
+  }
+
+  showPage('result');
+}
+
+// ===== LEADERBOARD =====
+async function renderLeaderboard() {
+  await renderScoresLb();
+  await renderUserRankLb();
+}
+
+async function renderScoresLb() {
+  const history = await getHistory();
+  const container = document.getElementById('lb-scores');
+  if (history.length === 0) {
+    container.innerHTML = '<div class="lb-empty">还没有挑战记录哦<br>快去挑战吧！🚀</div>';
+    return;
+  }
+
+  const sorted = [...history].sort((a, b) => b.score - a.score);
+  container.innerHTML = '';
+  sorted.forEach((h, i) => {
+    const div = document.createElement('div');
+    div.className = 'lb-item';
+    let rankClass = '';
+    let rankText = i + 1;
+    if (i === 0) { rankClass = 'gold'; rankText = '🥇'; }
+    else if (i === 1) { rankClass = 'silver'; rankText = '🥈'; }
+    else if (i === 2) { rankClass = 'bronze'; rankText = '🥉'; }
+    const dateStr = new Date(h.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `
+      <div class="lb-rank ${rankClass}">${rankText}</div>
+      <div class="lb-info">
+        <div class="lb-type">${h.type} (${h.correct}/${h.total})</div>
+        <div class="lb-date">${dateStr}</div>
+      </div>
+      <div class="lb-score-val">${h.score}分</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function renderUserRankLb() {
+  const container = document.getElementById('lb-userrank');
+  
+  // 使用云端 API 获取所有用户排行数据
+  const leaderboard = await apiGet('/leaderboard');
+  
+  if (!leaderboard || leaderboard.length === 0) {
+    container.innerHTML = '<div class="lb-empty">还没有用户记录<br>快去挑战吧！🚀</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  leaderboard.forEach((u, i) => {
+    const div = document.createElement('div');
+    const isCurrent = currentUser && u.name === currentUser.name;
+    const avatar = getAvatarForUser(u.name);
+    div.className = 'user-rank-item' + (isCurrent ? ' current-user' : '');
+    let rankText = i + 1;
+    if (i === 0) rankText = '🥇';
+    else if (i === 1) rankText = '🥈';
+    else if (i === 2) rankText = '🥉';
+    div.innerHTML = `
+      <div class="lb-rank" style="min-width:32px;text-align:center;font-weight:800">${rankText}</div>
+      <div class="user-rank-avatar">${avatar}</div>
+      <div class="user-rank-name">${u.name}${isCurrent ? ' (我)' : ''}</div>
+      <div style="text-align:right">
+        <div class="user-rank-score">${u.totalScore}分</div>
+        <div style="font-size:0.7rem;color:#aaa">${u.challengeCount}次挑战</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function switchLbTab(tab, el) {
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lb-scores').classList.toggle('hidden', tab !== 'scores');
+  document.getElementById('lb-userrank').classList.toggle('hidden', tab !== 'userrank');
+}
+
+// ===== WRONG BOOK =====
+async function renderWrongBook() {
+  const stats = await getWordStats();
+  const container = document.getElementById('wrong-book-list');
+  const clearBtn = document.getElementById('btn-clear-wrong');
+
+  const wrongWords = [];
+  Object.keys(stats).forEach(id => {
+    const s = stats[id];
+    if (s.wrong > 0) {
+      const w = WORDS.find(x => x['编号'] === id);
+      if (w) {
+        const total = s.correct + s.wrong;
+        const errRate = Math.round(s.wrong / total * 100);
+        wrongWords.push({ word: w, ...s, errRate });
+      }
+    }
+  });
+
+  if (wrongWords.length === 0) {
+    container.innerHTML = '<div class="lb-empty">错题本是空的<br>继续保持哦！🌈</div>';
+    clearBtn.classList.add('hidden');
+    return;
+  }
+
+  clearBtn.classList.remove('hidden');
+  // Sort by error rate desc (易错倒排)
+  wrongWords.sort((a, b) => b.errRate - a.errRate || b.wrong - a.wrong);
+  container.innerHTML = '';
+
+  wrongWords.forEach(item => {
+    const w = item.word;
+    const div = document.createElement('div');
+    div.className = 'wrong-book-item';
+    let rateClass = 'low-err';
+    if (item.errRate >= 60) rateClass = 'high-err';
+    else if (item.errRate >= 30) rateClass = 'mid-err';
+    div.innerHTML = `
+      <img src="extracted_data_final/${w['图片路径']}" />
+      <div class="wrong-book-info">
+        <div class="wrong-book-word">${w['单词拼写']}</div>
+        <div class="wrong-book-meaning">${w['中文意思'].replace(/\n/g, '')}</div>
+        <div class="wrong-book-stats">
+          <span class="wrong-book-stat bad">错 ${item.wrong}</span>
+          <span class="wrong-book-stat good">对 ${item.correct}</span>
+        </div>
+      </div>
+      <div class="wrong-book-rate ${rateClass}">${item.errRate}%</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ===== CELEBRATION =====
+function showCelebration() {
+  const emojis = ['⭐', '🌟', '✨', '💫', '🎉', '🎊', '👏', '💖'];
+  const container = document.createElement('div');
+  container.className = 'celebration';
+  document.body.appendChild(container);
+
+  for (let i = 0; i < 12; i++) {
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    star.style.left = (10 + Math.random() * 80) + '%';
+    star.style.top = (20 + Math.random() * 40) + '%';
+    star.style.animationDelay = (Math.random() * 0.4) + 's';
+    star.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+    container.appendChild(star);
+  }
+
+  setTimeout(() => container.remove(), 1500);
+}
+
+// ===== DIALOGS =====
+function confirmQuit() {
+  showDialog('确定要退出本次挑战吗？\n当前进度将不会保存', () => {
+    closeDialog();
+    document.getElementById('btn-skip').style.display = 'none';
+    showPage('home');
+    currentChallenge = null;
+  });
+}
+
+function confirmSkip() {
+  if (isShowingResult) return;
+  showDialog('确定要跳过这个单词吗？\n跳过会记为答错哦', () => {
+    closeDialog();
+    skipWord();
+  });
+}
+
+function confirmClearWrong() {
+  showDialog('确定要清空错题本吗？\n错误记录将被重置', async () => {
+    const stats = await getWordStats();
+    Object.keys(stats).forEach(k => {
+      stats[k].wrong = 0;
+    });
+    await saveWordStats(stats);
+    closeDialog();
+    await renderWrongBook();
+  });
+}
+
+function confirmDeleteUser(name) {
+  showDialog(`确定要删除用户"${name}"吗？\n该用户的所有记录将被清空！`, async () => {
+    // 调用云端 API 删除用户
+    try {
+      const resp = await fetch(API_BASE + '/users/' + encodeURIComponent(name), {
+        method: 'DELETE'
+      });
+      if (!resp.ok) throw new Error('删除失败');
+      
+      // 清除缓存
+      cachedUsersDB = null;
+      
+      // 如果删除的是当前登录的用户，清除本地存储
+      if (localStorage.getItem('sw_last_user') === name) {
+        localStorage.removeItem('sw_last_user');
+      }
+      
+      closeDialog();
+      await renderLoginHistory();
+    } catch (err) {
+      console.error('删除用户失败:', err);
+      closeDialog();
+      alert('删除用户失败，请重试');
+    }
+  });
+}
+
+function showDialog(msg, onConfirm) {
+  document.getElementById('dialog-msg').textContent = msg;
+  document.getElementById('dialog-overlay').classList.remove('hidden');
+  document.getElementById('dialog-confirm-btn').onclick = onConfirm;
+}
+
+function closeDialog() {
+  document.getElementById('dialog-overlay').classList.add('hidden');
+}
+
+// ===== KEYBOARD SUPPORT =====
+document.addEventListener('keydown', (e) => {
+  if (!currentChallenge || document.getElementById('page-challenge').classList.contains('active') === false) return;
+
+  if (isShowingResult) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      nextWord();
+    }
+    return;
+  }
+
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (currentAnswer.length > 0) {
+      const last = currentAnswer.pop();
+      const blankEls = getBlankEls();
+      blankEls[last.blankIndex].textContent = '';
+      blankEls[last.blankIndex].className = 'blank-slot';
+      const letterBtns = document.getElementById('ch-letters').children;
+      letterBtns[last.btnIndex].classList.remove('used');
+      const totalLetterBlanks = currentWordMeta.blanks.filter(b => b.type === 'letter').length;
+      document.getElementById('btn-submit').disabled = currentAnswer.length < totalLetterBlanks;
+    }
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const totalLetterBlanks = currentWordMeta.blanks.filter(b => b.type === 'letter').length;
+    if (currentAnswer.length >= totalLetterBlanks) {
+      submitAnswer();
+    }
+    return;
+  }
+
+  const letter = e.key.toLowerCase();
+  if (/^[a-z]$/.test(letter)) {
+    const letterBtns = document.getElementById('ch-letters').children;
+    for (let i = 0; i < letterBtns.length; i++) {
+      if (!letterBtns[i].classList.contains('used') && letterBtns[i].textContent.toLowerCase() === letter) {
+        pickLetter(i);
+        break;
+      }
+    }
+  }
+});
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>

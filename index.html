@@ -636,6 +636,52 @@ body::before {
 }
 .dialog-cancel { background: #f5f5f5; color: #999; }
 .dialog-confirm { background: linear-gradient(135deg, #ef5350, #e53935); color: #fff; }
+
+/* ===== Challenge Type Modal ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center;
+  justify-content: center; z-index: 200; animation: fadeIn 0.2s;
+}
+.modal-overlay.hidden { display: none; }
+.modal-box {
+  background: #fff; border-radius: 24px; padding: 28px 20px 20px;
+  max-width: 320px; width: 90%; text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-title {
+  font-size: 1.15rem; font-weight: 700; color: #333; margin-bottom: 18px;
+}
+.modal-options {
+  display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
+}
+.modal-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 16px; border: 2px solid #f0f0f0;
+  background: #fafafa; cursor: pointer; transition: all 0.2s;
+  font-size: 1rem; font-weight: 600; color: #444;
+}
+.modal-option:active { transform: scale(0.97); }
+.modal-option .opt-emoji { font-size: 1.4rem; }
+.modal-option .opt-label { flex: 1; text-align: left; }
+.modal-option .opt-count { font-size: 0.8rem; color: #999; font-weight: 400; }
+.modal-option:nth-child(1) { border-color: #bbdefb; background: #e3f2fd; }
+.modal-option:nth-child(1):active { background: #bbdefb; }
+.modal-option:nth-child(2) { border-color: #c8e6c9; background: #e8f5e9; }
+.modal-option:nth-child(2):active { background: #c8e6c9; }
+.modal-option:nth-child(3) { border-color: #ffe0b2; background: #fff3e0; }
+.modal-option:nth-child(3):active { background: #ffe0b2; }
+.modal-close {
+  padding: 10px 24px; border-radius: 14px; border: none;
+  background: #f5f5f5; color: #999; font-size: 0.9rem;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.modal-close:active { background: #eee; }
 </style>
 </head>
 <body>
@@ -678,12 +724,21 @@ body::before {
   <div class="home-subtitle">和小贝壳一起学英语吧！</div>
 
   <div class="home-buttons">
-    <button class="btn-primary" onclick="startChallenge('smart20')">
+    <button class="btn-primary" onclick="showChallengeModal('smart')">
       <span class="emoji">⭐</span> 开始挑战
     </button>
-    <button class="btn-secondary" onclick="startChallenge('all')">
+    <button class="btn-secondary" onclick="showChallengeModal('all')">
       <span class="emoji">🚀</span> 挑战全部
     </button>
+  </div>
+
+  <!-- Challenge Type Selection Modal -->
+  <div id="challenge-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeChallengeModal()">
+    <div class="modal-box">
+      <div class="modal-title" id="modal-title">选择挑战类型</div>
+      <div class="modal-options" id="modal-options"></div>
+      <button class="modal-close" onclick="closeChallengeModal()">取消</button>
+    </div>
   </div>
 
   <div class="home-stats">
@@ -748,12 +803,12 @@ body::before {
     <div class="result-detail" id="res-detail"></div>
 
     <div class="result-wrong-list hidden" id="res-wrong-list">
-      <h3>😅 错误单词 TOP 3</h3>
+      <h3>😝 答错 TOP 3</h3>
       <div id="res-wrong-items"></div>
     </div>
 
     <div class="result-actions">
-      <button class="btn-primary" onclick="startChallenge('smart20')">
+      <button class="btn-primary" onclick="showChallengeModal('smart')">
         <span class="emoji">⭐</span> 再来一次
       </button>
       <button class="btn-secondary" onclick="showPage('home')">
@@ -801,6 +856,7 @@ body::before {
 <script>
 // ===== DATA & STATE =====
 let WORDS = [];
+let PHRASES = [];
 let currentChallenge = null;
 let currentAnswer = [];
 let currentWordMeta = null;
@@ -982,11 +1038,15 @@ async function saveHistory(entry) {
 // ===== INIT =====
 async function init() {
   try {
-    const resp = await fetch('extracted_data_final/data.json');
-    WORDS = await resp.json();
+    const [wordsResp, phrasesResp] = await Promise.all([
+      fetch('extracted_data_final/data.json'),
+      fetch('extracted_data_final/phrases.json')
+    ]);
+    WORDS = await wordsResp.json();
+    PHRASES = await phrasesResp.json();
   } catch (e) {
-    console.error('Failed to load data.json', e);
-    alert('加载单词数据失败，请确保 extracted_data_final/data.json 可访问');
+    console.error('Failed to load data', e);
+    alert('加载数据失败，请确保 extracted_data_final/ 下的 data.json 和 phrases.json 可访问');
     return;
   }
 
@@ -1040,10 +1100,9 @@ async function updateHomeStats() {
     totalAttempts > 0 ? Math.round(totalCorrect / totalAttempts * 100) + '%' : '-';
 }
 
-// ===== SMART WORD SELECTION =====
-async function selectSmart20() {
-  const stats = await getWordStats();
-  const scored = WORDS.map(w => {
+// ===== SMART SELECTION =====
+function smartSelect(pool, count, stats) {
+  const scored = pool.map(w => {
     const s = stats[w['编号']] || { correct: 0, wrong: 0, seen: 0 };
     let score = 100;
     const total = s.correct + s.wrong;
@@ -1058,7 +1117,7 @@ async function selectSmart20() {
   });
 
   scored.sort((a, b) => b.score - a.score);
-  const selected = scored.slice(0, 20).map(s => s.word);
+  const selected = scored.slice(0, count).map(s => s.word);
   for (let i = selected.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [selected[i], selected[j]] = [selected[j], selected[i]];
@@ -1066,17 +1125,97 @@ async function selectSmart20() {
   return selected;
 }
 
+async function selectSmart20WithPhrases() {
+  const stats = await getWordStats();
+  // 从单词+短语合并池中智能选20个
+  const allPool = [...WORDS, ...PHRASES];
+  return smartSelect(allPool, 20, stats);
+}
+
+// ===== CHALLENGE MODAL =====
+let pendingChallengeMode = ''; // 'smart' or 'all'
+
+function showChallengeModal(mode) {
+  pendingChallengeMode = mode;
+  const modal = document.getElementById('challenge-modal');
+  const title = document.getElementById('modal-title');
+  const options = document.getElementById('modal-options');
+
+  const isSmart = mode === 'smart';
+  title.textContent = isSmart ? '选择挑战类型（各20题）' : '选择挑战类型（全量）';
+
+  const wordCount = WORDS.length;
+  const phraseCount = PHRASES.length;
+  const mixCount = wordCount + phraseCount;
+
+  options.innerHTML = `
+    <div class="modal-option" onclick="pickChallengeType('words')">
+      <span class="opt-emoji">📚</span>
+      <span class="opt-label">挑战单词</span>
+      <span class="opt-count">${isSmart ? '20' : wordCount}题</span>
+    </div>
+    <div class="modal-option" onclick="pickChallengeType('phrases')">
+      <span class="opt-emoji">📝</span>
+      <span class="opt-label">挑战短语</span>
+      <span class="opt-count">${isSmart ? '20' : phraseCount}题</span>
+    </div>
+    <div class="modal-option" onclick="pickChallengeType('mix')">
+      <span class="opt-emoji">🎯</span>
+      <span class="opt-label">混合挑战</span>
+      <span class="opt-count">${isSmart ? '20' : mixCount}题</span>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+}
+
+function closeChallengeModal() {
+  document.getElementById('challenge-modal').classList.add('hidden');
+}
+
+function pickChallengeType(subType) {
+  closeChallengeModal();
+  // 组合类型: smart_words, smart_phrases, smart_mix, all_words, all_phrases, all_mix
+  const challengeType = pendingChallengeMode + '_' + subType;
+  startChallenge(challengeType);
+}
+
 // ===== START CHALLENGE =====
 async function startChallenge(type) {
   let words;
-  if (type === 'smart20') {
-    words = await selectSmart20();
-  } else {
+  const stats = await getWordStats();
+
+  // 兼容旧类型（从"再来一次"等入口）
+  if (type === 'smart20') type = 'smart_mix';
+
+  if (type === 'smart_words') {
+    words = smartSelect([...WORDS], 20, stats);
+  } else if (type === 'smart_phrases') {
+    words = smartSelect([...PHRASES], 20, stats);
+  } else if (type === 'smart_mix') {
+    words = smartSelect([...WORDS, ...PHRASES], 20, stats);
+  } else if (type === 'all_words') {
     words = [...WORDS];
     for (let i = words.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [words[i], words[j]] = [words[j], words[i]];
     }
+  } else if (type === 'all_phrases') {
+    words = [...PHRASES];
+    for (let i = words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [words[i], words[j]] = [words[j], words[i]];
+    }
+  } else if (type === 'all_mix') {
+    words = [...WORDS, ...PHRASES];
+    for (let i = words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [words[i], words[j]] = [words[j], words[i]];
+    }
+  } else {
+    // fallback
+    words = smartSelect([...WORDS, ...PHRASES], 20, stats);
+    type = 'smart_mix';
   }
 
   currentChallenge = {
@@ -1102,7 +1241,13 @@ function loadCurrentWord() {
   const pct = ((ch.index) / ch.words.length * 100).toFixed(1);
   document.getElementById('ch-progress-bar').style.width = pct + '%';
 
-  document.getElementById('ch-image').src = 'extracted_data_final/' + w['图片路径'];
+  const imageWrap = document.querySelector('.challenge-image-wrap');
+  if (w['图片路径']) {
+    document.getElementById('ch-image').src = 'extracted_data_final/' + w['图片路径'];
+    imageWrap.style.display = '';
+  } else {
+    imageWrap.style.display = 'none';
+  }
 
   const hint = w['中文意思'].replace(/\n/g, '');
   document.getElementById('ch-hint').textContent = hint;
@@ -1113,7 +1258,7 @@ function loadCurrentWord() {
     const ch2 = spelling[i];
     if (ch2 === ' ' || ch2 === '/' || ch2 === '-') {
       blanks.push({ type: 'special', char: ch2 });
-    } else if (ch2 === '(' || ch2 === ')') {
+    } else if (ch2 === '(' || ch2 === ')' || ch2 === '＝') {
       blanks.push({ type: 'special', char: ch2 });
     } else {
       blanks.push({ type: 'letter', char: ch2.toLowerCase(), index: lettersNeeded.length });
@@ -1400,7 +1545,7 @@ async function showResult() {
 
   const historyEntry = {
     date: new Date().toISOString(),
-    type: ch.type === 'smart20' ? '随机挑战' : '全部挑战',
+    type: ch.type === 'smart20' ? '综合挑战' : (ch.type === 'phrases' ? '短语挑战' : '单词挑战'),
     score,
     total,
     correct,
@@ -1418,7 +1563,7 @@ async function showResult() {
   document.getElementById('res-title').textContent = title;
   document.getElementById('res-score').textContent = score + '分';
   document.getElementById('res-detail').innerHTML =
-    `答对 <b style="color:#4caf50">${correct}</b> 个，答错 <b style="color:#ef5350">${total - correct}</b> 个<br>共 ${total} 个单词`;
+    `答对 <b style="color:#4caf50">${correct}</b> 个，答错 <b style="color:#ef5350">${total - correct}</b> 个<br>共 ${total} 题`;
 
   const wrongListEl = document.getElementById('res-wrong-list');
   const wrongItemsEl = document.getElementById('res-wrong-items');
@@ -1429,9 +1574,10 @@ async function showResult() {
       const w = r.word;
       const div = document.createElement('div');
       div.className = 'wrong-word-item';
+      const imgHtml = w['图片路径'] ? `<img src="extracted_data_final/${w['图片路径']}" />` : '';
       div.innerHTML = `
         <span class="rank">${i + 1}</span>
-        <img src="extracted_data_final/${w['图片路径']}" />
+        ${imgHtml}
         <span class="word">${w['单词拼写']}</span>
         <span class="meaning">${w['中文意思'].replace(/\n/g, '')}</span>
       `;
@@ -1532,7 +1678,7 @@ async function renderWrongBook() {
   Object.keys(stats).forEach(id => {
     const s = stats[id];
     if (s.wrong > 0) {
-      const w = WORDS.find(x => x['编号'] === id);
+      const w = WORDS.find(x => x['编号'] === id) || PHRASES.find(x => x['编号'] === id);
       if (w) {
         const total = s.correct + s.wrong;
         const errRate = Math.round(s.wrong / total * 100);
@@ -1559,8 +1705,9 @@ async function renderWrongBook() {
     let rateClass = 'low-err';
     if (item.errRate >= 60) rateClass = 'high-err';
     else if (item.errRate >= 30) rateClass = 'mid-err';
+    const imgHtml = w['图片路径'] ? `<img src="extracted_data_final/${w['图片路径']}" />` : '';
     div.innerHTML = `
-      <img src="extracted_data_final/${w['图片路径']}" />
+      ${imgHtml}
       <div class="wrong-book-info">
         <div class="wrong-book-word">${w['单词拼写']}</div>
         <div class="wrong-book-meaning">${w['中文意思'].replace(/\n/g, '')}</div>
@@ -1608,7 +1755,7 @@ function confirmQuit() {
 
 function confirmSkip() {
   if (isShowingResult) return;
-  showDialog('确定要跳过这个单词吗？\n跳过会记为答错哦', () => {
+  showDialog('确定要跳过这道题吗？\n跳过会记为答错哦', () => {
     closeDialog();
     skipWord();
   });

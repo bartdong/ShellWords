@@ -134,6 +134,20 @@ body::before {
   box-shadow: 0 8px 28px rgba(79,195,247,0.4);
 }
 
+.btn-special {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 18px 24px; border-radius: 24px; font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 700; cursor: pointer; border: none;
+  transition: all 0.25s; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #ffca28, #ff8f00);
+  color: #fff; box-shadow: 0 6px 20px rgba(255,143,0,0.3);
+}
+.btn-special:hover, .btn-special:active {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(255,143,0,0.4);
+}
+.btn-special .emoji { font-size: 1.4em; }
+
 .btn-primary .emoji, .btn-secondary .emoji { font-size: 1.4em; }
 
 .home-stats {
@@ -730,6 +744,9 @@ body::before {
     <button class="btn-secondary" onclick="showChallengeModal('all')">
       <span class="emoji">🚀</span> 挑战全部
     </button>
+    <button class="btn-special" onclick="startChallenge('spelling_bee')">
+      <span class="emoji">🐝</span> 特别挑战
+    </button>
   </div>
 
   <!-- Challenge Type Selection Modal -->
@@ -857,6 +874,7 @@ body::before {
 // ===== DATA & STATE =====
 let WORDS = [];
 let PHRASES = [];
+let SPELLING_BEE = [];
 let currentChallenge = null;
 let currentAnswer = [];
 let currentWordMeta = null;
@@ -1038,12 +1056,14 @@ async function saveHistory(entry) {
 // ===== INIT =====
 async function init() {
   try {
-    const [wordsResp, phrasesResp] = await Promise.all([
+    const [wordsResp, phrasesResp, spellingBeeResp] = await Promise.all([
       fetch('extracted_data_final/data.json'),
-      fetch('extracted_data_final/phrases.json')
+      fetch('extracted_data_final/phrases.json'),
+      fetch('extracted_data_final/spelling_bee.json')
     ]);
     WORDS = await wordsResp.json();
     PHRASES = await phrasesResp.json();
+    SPELLING_BEE = await spellingBeeResp.json();
   } catch (e) {
     console.error('Failed to load data', e);
     alert('加载数据失败，请确保 extracted_data_final/ 下的 data.json 和 phrases.json 可访问');
@@ -1188,7 +1208,13 @@ async function startChallenge(type) {
   // 兼容旧类型（从"再来一次"等入口）
   if (type === 'smart20') type = 'smart_mix';
 
-  if (type === 'smart_words') {
+  if (type === 'spelling_bee') {
+    words = [...SPELLING_BEE];
+    for (let i = words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [words[i], words[j]] = [words[j], words[i]];
+    }
+  } else if (type === 'smart_words') {
     words = smartSelect([...WORDS], 20, stats);
   } else if (type === 'smart_phrases') {
     words = smartSelect([...PHRASES], 20, stats);
@@ -1545,7 +1571,7 @@ async function showResult() {
 
   const historyEntry = {
     date: new Date().toISOString(),
-    type: ch.type === 'smart20' ? '综合挑战' : (ch.type === 'phrases' ? '短语挑战' : '单词挑战'),
+    type: ch.type === 'smart20' ? '综合挑战' : (ch.type === 'spelling_bee' ? '特别挑战' : (ch.type === 'phrases' ? '短语挑战' : '单词挑战')),
     score,
     total,
     correct,
@@ -1678,7 +1704,7 @@ async function renderWrongBook() {
   Object.keys(stats).forEach(id => {
     const s = stats[id];
     if (s.wrong > 0) {
-      const w = WORDS.find(x => x['编号'] === id) || PHRASES.find(x => x['编号'] === id);
+      const w = WORDS.find(x => x['编号'] === id) || PHRASES.find(x => x['编号'] === id) || SPELLING_BEE.find(x => x['编号'] === id);
       if (w) {
         const total = s.correct + s.wrong;
         const errRate = Math.round(s.wrong / total * 100);

@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/var/www/html/shellwords/server
+WorkingDirectory=<your-deploy-path>/server
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=10
